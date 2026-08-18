@@ -1,0 +1,10 @@
+{
+  "description": "A comprehensive veterinary clinic management system streamlining appointments, patient records, prescriptions, billing, and reporting for clinic staff.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

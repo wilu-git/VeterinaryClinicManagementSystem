@@ -1,0 +1,111 @@
+import { useState } from 'react';
+import { type Navigate, pets, getOwner } from '../data';
+import Badge from '../components/Badge';
+
+interface Props { navigate: Navigate; }
+
+export default function PetPatients({ navigate }: Props) {
+  const [search, setSearch] = useState('');
+  const [speciesFilter, setSpeciesFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+
+  const filtered = pets.filter((p) => {
+    const owner = getOwner(p.ownerId);
+    const q = search.toLowerCase();
+    const matchSearch = !q || p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || p.breed.toLowerCase().includes(q) || owner?.name.toLowerCase().includes(q);
+    const matchSpecies = speciesFilter === 'All' || p.species === speciesFilter;
+    const matchStatus = statusFilter === 'All' || p.status === statusFilter;
+    return matchSearch && matchSpecies && matchStatus;
+  });
+
+  return (
+    <div className="p-6 min-h-full bg-slate-50">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Pet Patients</h1>
+          <p className="text-slate-500 text-sm mt-0.5">{filtered.length} patients registered</p>
+        </div>
+        <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors cursor-pointer">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
+          Register New Pet
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-wrap gap-3">
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex-1 min-w-48">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-slate-400 shrink-0"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, ID, breed..." className="bg-transparent text-sm outline-none flex-1 text-slate-700 placeholder-slate-400" />
+        </div>
+        <select value={speciesFilter} onChange={(e) => setSpeciesFilter(e.target.value)} className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 bg-white outline-none cursor-pointer">
+          {['All', 'Dog', 'Cat', 'Bird', 'Rabbit', 'Hamster'].map((s) => <option key={s}>{s}</option>)}
+        </select>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 bg-white outline-none cursor-pointer">
+          {['All', 'Active', 'Inactive'].map((s) => <option key={s}>{s}</option>)}
+        </select>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-xs text-slate-500 font-semibold bg-slate-50 border-b border-slate-200">
+                <th className="text-left px-5 py-3.5">Pet</th>
+                <th className="text-left px-5 py-3.5">Pet ID</th>
+                <th className="text-left px-5 py-3.5 hidden sm:table-cell">Species</th>
+                <th className="text-left px-5 py-3.5 hidden md:table-cell">Breed</th>
+                <th className="text-left px-5 py-3.5 hidden sm:table-cell">Sex / Age</th>
+                <th className="text-left px-5 py-3.5 hidden md:table-cell">Owner</th>
+                <th className="text-left px-5 py-3.5">Status</th>
+                <th className="text-left px-5 py-3.5">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((p) => {
+                const owner = getOwner(p.ownerId);
+                return (
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-xl shrink-0">
+                          {p.species === 'Cat' ? '🐈' : p.species === 'Bird' ? '🦜' : '🐕'}
+                        </div>
+                        <span className="text-sm font-medium text-slate-900">{p.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-blue-600 font-medium">
+                      <button onClick={() => navigate('pet-profile', { id: p.id })} className="cursor-pointer hover:underline">{p.id}</button>
+                    </td>
+                    <td className="px-5 py-4 hidden sm:table-cell"><Badge label={p.species} /></td>
+                    <td className="px-5 py-4 text-sm text-slate-600 hidden md:table-cell">{p.breed}</td>
+                    <td className="px-5 py-4 hidden sm:table-cell">
+                      <div className="text-sm text-slate-700">{p.sex}</div>
+                      <div className="text-xs text-slate-400">{p.age}</div>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-slate-600 hidden md:table-cell">
+                      <button onClick={() => navigate('owner-profile', { id: owner?.id ?? '' })} className="hover:text-blue-600 cursor-pointer">{owner?.name}</button>
+                    </td>
+                    <td className="px-5 py-4"><Badge label={p.status} /></td>
+                    <td className="px-5 py-4">
+                      <div className="flex gap-1">
+                        <button onClick={() => navigate('pet-profile', { id: p.id })} className="text-xs text-slate-600 border border-slate-200 px-2.5 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer font-medium">View</button>
+                        <button className="text-xs text-slate-600 border border-slate-200 px-2.5 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer font-medium">Edit</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex items-center justify-between px-5 py-3.5 border-t border-slate-100">
+          <span className="text-sm text-slate-500">Showing {filtered.length} of {pets.length} pets</span>
+          <div className="flex gap-1">
+            <button className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-500 cursor-pointer hover:bg-slate-50">Previous</button>
+            <button className="px-3 py-1.5 text-sm border border-blue-600 rounded-lg bg-blue-600 text-white cursor-pointer font-medium">1</button>
+            <button className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-500 cursor-pointer hover:bg-slate-50">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
